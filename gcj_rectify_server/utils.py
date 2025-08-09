@@ -10,24 +10,63 @@ from .transform import wgs2gcj
 
 APP_DIR = Path(__file__).parent
 
+gcj_maps = {
+    "amap-vec": {
+        "name": "高德地图 - 矢量地图",
+        "url": "https://wprd02.is.autonavi.com//appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}",
+        "min_zoom": 3,
+        "max_zoom": 18,
+    },
+    "amap-sat": {
+        "name": "高德地图 - 卫星影像",
+        "url": "https://wprd02.is.autonavi.com//appmaptile?lang=zh_cn&size=1&scale=1&style=6&x={x}&y={y}&z={z}",
+        "min_zoom": 3,
+        "max_zoom": 18,
+    },
+    "tencent-vec": {
+        "name": "腾讯地图 - 矢量地图",
+        "url": "http://rt0.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0",
+        "min_zoom": 3,
+        "max_zoom": 18,
+    },
+}
 
-def get_cache_dir() -> str:
+
+def get_cache_dir() -> Path:
     """
     Get the cache directory from the environment variable or default to the app directory.
 
     Returns:
         str: The path to the cache directory.
     """
-    env_cache = os.getenv("GCJRE_CACHE", "")
+    env_cache = os.getenv("GCJRE_CACHE")
     if env_cache:
-        print(f"Using cache directory from environment: {env_cache}")
-        return env_cache
-    print(f"Using current directory for cache: {Path.cwd().joinpath('cache')}")
-    return str(Path.cwd().joinpath("cache"))
+        # print(f"Using cache directory from environment: {env_cache}")
+        env_cache_dir = Path(env_cache)
+        env_cache_dir.mkdir(exist_ok=True)
+        return env_cache_dir
+    current_cache_dir = Path.cwd().joinpath("cache")
+    current_cache_dir.mkdir(exist_ok=True)
+    # print(f"Using current directory for cache: {current_cache_dir}")
+    return current_cache_dir
+
+
+def init_map_config():
+    cache_dir = Path(get_cache_dir())
+    map_file_path = cache_dir.joinpath("maps.json")
+    if not map_file_path.exists():
+        with open(str(map_file_path), "w", encoding="utf-8") as f:
+            json.dump(gcj_maps, f, indent=2, ensure_ascii=False)
 
 
 def get_maps():
-    return json.load(open(str(APP_DIR.joinpath("maps.json")), "r", encoding="utf-8"))
+    cache_dir = Path(get_cache_dir())
+    map_file_path = cache_dir.joinpath("maps.json")
+    if not map_file_path.exists():
+        init_map_config()
+    with open(map_file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data
 
 
 def bytes_to_image(content: bytes) -> Image:

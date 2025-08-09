@@ -7,7 +7,7 @@ import uvicorn
 
 from .fetch import reset_async_client
 from .rectify import get_tile_gcj_cached, get_tile_wgs_cached
-from .utils import get_cache_dir
+from .utils import get_cache_dir, init_map_config, get_maps
 
 
 @asynccontextmanager
@@ -24,9 +24,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.state.cache_dir = get_cache_dir()
 
-
-app.state.cache_dir = Path(get_cache_dir())
+print(f"Cache Dir: {app.state.cache_dir}")
+print(f"Map Config: {app.state.cache_dir.joinpath("maps.json")}")
 
 
 @app.get("/")
@@ -36,7 +37,7 @@ def index():
 
 @app.get("/config")
 def get_config(request: Request):
-    return {"cache_dir": str(request.app.state.cache_dir)}
+    return {"cache_dir": str(request.app.state.cache_dir), "maps": get_maps()}
 
 
 @app.get("/tiles/{map_id}/{z}/{x}/{y}")
