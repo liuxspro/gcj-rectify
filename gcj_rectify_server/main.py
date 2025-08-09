@@ -65,8 +65,7 @@ async def tile(map_id: str, z: int, x: int, y: int, request: Request):
 
         return Response(content=img_bytes, media_type="image/png")
     except Exception as e:
-        print(f"获取瓦片时发生错误: {e}")
-        return Response(status_code=500, content="Internal server error")
+        return Response(status_code=500, content=f"Internal server error {e}")
 
 
 def run(host: str = "0.0.0.0", port: int = 8000):
