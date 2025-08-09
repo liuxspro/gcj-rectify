@@ -25,7 +25,7 @@ dynamic = ["version"]
 
 
 [project.scripts]
-gcj_rectify = "gcj_rectify_server.main:run"
+gcj-rectify = "gcj_rectify_server.main:run"
 
 [tool.hatch.version]
 path = "gcj_rectify_server/__init__.py"
