@@ -82,19 +82,19 @@ def bytes_to_image(content: bytes) -> Image:
     return Image.open(BytesIO(content))
 
 
-def image_to_bytes(image: Image, format: str = "PNG") -> bytes:
+def image_to_bytes(image: Image, img_format: str = "PNG") -> bytes:
     """
     Convert a PIL Image to bytes.
 
     Args:
         image (Image): PIL Image object.
-        format (str): Format to save the image, default is "PNG".
+        img_format (str): Format to save the image, default is "PNG".
 
     Returns:
         bytes: Image data in bytes.
     """
     img_buffer = BytesIO()
-    image.save(img_buffer, format=format)
+    image.save(img_buffer, format=img_format)
     img_bytes = img_buffer.getvalue()
     img_buffer.close()
     return img_bytes
