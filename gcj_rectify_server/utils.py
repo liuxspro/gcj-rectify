@@ -1,14 +1,14 @@
 import json
-from io import BytesIO
 import os
+from io import BytesIO
 from math import atan, cos, log, pi, sinh, tan
 from pathlib import Path
 
 from PIL import Image
 
+# 使用了来自 Geohey-Team 的 qgis-geohey-toolbox 插件中的转换算法
+# https://github.com/GeoHey-Team/qgis-geohey-toolbox
 from .transform import wgs2gcj
-
-APP_DIR = Path(__file__).parent
 
 gcj_maps = {
     "amap-vec": {

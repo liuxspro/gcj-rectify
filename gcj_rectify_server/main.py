@@ -1,13 +1,12 @@
-from contextlib import asynccontextmanager
-from pathlib import Path
 import argparse
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Response, Request
 import uvicorn
+from fastapi import FastAPI, Response, Request
 
 from .fetch import reset_async_client
 from .rectify import get_tile_gcj_cached, get_tile_wgs_cached
-from .utils import get_cache_dir, init_map_config, get_maps
+from .utils import get_cache_dir, get_maps
 
 
 @asynccontextmanager
@@ -85,5 +84,5 @@ def run(host: str = "0.0.0.0", port: int = 8000):
 
     args = parser.parse_args()
 
-    print(f"启动服务器: http://{args.host}:{args.port}")
+    print(f"Server Runing At: http://{args.host}:{args.port}")
     uvicorn.run(app, host=args.host, port=args.port)
