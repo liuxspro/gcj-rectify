@@ -51,19 +51,17 @@ def get_cache_dir() -> Path:
     return current_cache_dir
 
 
-def init_map_config():
-    cache_dir = Path(get_cache_dir())
-    map_file_path = cache_dir.joinpath("maps.json")
+def init_map_config(config_path: Path):
+    map_file_path = config_path.joinpath("maps.json")
     if not map_file_path.exists():
         with open(str(map_file_path), "w", encoding="utf-8") as f:
             json.dump(gcj_maps, f, indent=2, ensure_ascii=False)
 
 
-def get_maps():
-    cache_dir = Path(get_cache_dir())
-    map_file_path = cache_dir.joinpath("maps.json")
+def get_maps(config_path: Path):
+    map_file_path = config_path.joinpath("maps.json")
     if not map_file_path.exists():
-        init_map_config()
+        init_map_config(config_path)
     with open(map_file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data

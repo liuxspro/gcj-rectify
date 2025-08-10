@@ -14,17 +14,16 @@ from .utils import (
     get_maps,
 )
 
-map_data = get_maps()
 
-
-async def get_tile_gcj(x: int, y: int, z: int, mapid: str) -> bytes:
+async def get_tile_gcj(x: int, y: int, z: int, mapid: str, map_data) -> bytes:
     """
-    获取指定瓦片的图像，这里下载的是原始瓦片(GCJ02 坐标系)。
+    获取指定行列号的瓦片，这里下载的是原始瓦片(GCJ02 坐标系)。
     Args:
         x (int): Tile X coordinate.
         y (int): Tile Y coordinate.
         z (int): Zoom level.
         mapid (str): Map Id
+        map_data: GCJ Maps
     Returns:
         bytes: Tile image bytes.
     """
@@ -43,8 +42,8 @@ async def get_tile_gcj(x: int, y: int, z: int, mapid: str) -> bytes:
 
 
 async def get_tile_gcj_cached(
-    x: int, y: int, z: int, mapid: str, cache_dir: Path = Path.cwd().joinpath("cache")
-) -> Image:
+    x: int, y: int, z: int, mapid: str, cache_dir: Path
+) -> bytes:
     """
     获取指定瓦片的图像，使用缓存。
     Args:
@@ -63,37 +62,23 @@ async def get_tile_gcj_cached(
         return image_to_bytes(image)
     # 如果缓存不存在，则下载瓦片并保存到缓存
     tile_file_path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        image_bytes = await get_tile_gcj(x, y, z, mapid)
-        image = bytes_to_image(image_bytes)
-        image.save(tile_file_path, "PNG")
-    except Exception as e:
-        print(f"获取瓦片失败: {e}")
-        # 如果是事件循环错误，尝试重置客户端并重试
-        if "Event loop is closed" in str(e) or "RuntimeError" in str(e):
-            from .fetch import reset_async_client
 
-            reset_async_client()
-            try:
-                image_bytes = await get_tile_gcj(x, y, z, mapid)
-                image = bytes_to_image(image_bytes)
-                image.save(tile_file_path, "PNG")
-            except Exception as retry_e:
-                print(f"重试获取瓦片失败: {retry_e}")
-                return None
-        else:
-            return None
+    map_data = get_maps(cache_dir)
+    image_bytes = await get_tile_gcj(x, y, z, mapid, map_data)
+    image = bytes_to_image(image_bytes)
+    image.save(tile_file_path, "PNG")
 
     return image_bytes
 
 
-async def get_tile_wgs(x: int, y: int, z: int, mapid: str) -> Image:
+async def get_tile_wgs(
+    x: int, y: int, z: int, mapid: str, cache_dir: Path
+) -> bytes | None:
     """
     获取瓦片(调整为 WGS84 坐标系)
     """
     if z <= 9:
-        print("Z 小于 9 时 没有明显的偏移 直接使用 GCJ02 坐标系的瓦片")
-        return
+        return None
 
     wgs_bbox = xyz_to_bbox(x, y, z)
     gcj_bbox = wgsbbox_to_gcjbbox(wgs_bbox)
@@ -107,7 +92,7 @@ async def get_tile_wgs(x: int, y: int, z: int, mapid: str) -> Image:
     tasks = []
     for ax in range(x_min, x_max + 1):
         for ay in range(y_min, y_max + 1):
-            tasks.append(get_tile_gcj_cached(ax, ay, z, mapid))
+            tasks.append(get_tile_gcj_cached(ax, ay, z, mapid, cache_dir))
 
     # 并发执行所有瓦片下载任务
     tiles = await asyncio.gather(*tasks)
@@ -149,8 +134,8 @@ async def get_tile_wgs(x: int, y: int, z: int, mapid: str) -> Image:
 
 
 async def get_tile_wgs_cached(
-    x: int, y: int, z: int, mapid: str, cache_dir: Path = Path.cwd().joinpath("cache")
-) -> Image:
+    x: int, y: int, z: int, mapid: str, cache_dir: Path
+) -> bytes:
     """
     获取指定瓦片的图像，使用缓存。
     Args:
@@ -164,37 +149,12 @@ async def get_tile_wgs_cached(
     """
     tile_file_path = cache_dir.joinpath(f"{mapid}/WGS/{z}/{x}/{y}.png")
     if tile_file_path.exists():
-        # print(f"从缓存中获取了瓦片: {tile_file_path}")
         image = Image.open(tile_file_path)
         return image_to_bytes(image)
-    # 如果缓存不存在，则下载瓦片并保存到缓存
-    tile_file_path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        image_bytes = await get_tile_wgs(x, y, z, mapid)
-        image = bytes_to_image(image_bytes)
-        image.save(tile_file_path, "PNG")
-    except Exception as e:
-        print(f"获取WGS瓦片失败: {e}")
-        # 如果是事件循环错误，尝试重置客户端并重试
-        if "Event loop is closed" in str(e) or "RuntimeError" in str(e):
-            from .fetch import reset_async_client
 
-            reset_async_client()
-            try:
-                image_bytes = await get_tile_wgs(x, y, z, mapid)
-                image = bytes_to_image(image_bytes)
-                image.save(tile_file_path, "PNG")
-            except Exception as retry_e:
-                print(f"重试获取WGS瓦片失败: {retry_e}")
-                return None
-        else:
-            return None
+    tile_file_path.parent.mkdir(parents=True, exist_ok=True)
+    image_bytes = await get_tile_wgs(x, y, z, mapid, cache_dir)
+    image = bytes_to_image(image_bytes)
+    image.save(tile_file_path, "PNG")
 
     return image_bytes
-
-
-# 测试
-
-
-# http://127.0.0.1:8000/tiles/amap-sat/11/1661/807
-# https://wprd02.is.autonavi.com//appmaptile?lang=zh_cn&size=1&scale=1&style=6&x=1661&y=807&z=11
