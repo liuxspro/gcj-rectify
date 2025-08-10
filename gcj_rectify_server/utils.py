@@ -1,33 +1,70 @@
 import json
-from io import BytesIO
 import os
+from io import BytesIO
 from math import atan, cos, log, pi, sinh, tan
 from pathlib import Path
 
 from PIL import Image
 
+# 使用了来自 Geohey-Team 的 qgis-geohey-toolbox 插件中的转换算法
+# https://github.com/GeoHey-Team/qgis-geohey-toolbox
 from .transform import wgs2gcj
 
-APP_DIR = Path(__file__).parent
+gcj_maps = {
+    "amap-vec": {
+        "name": "高德地图 - 矢量地图",
+        "url": "https://wprd02.is.autonavi.com//appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}",
+        "min_zoom": 3,
+        "max_zoom": 18,
+    },
+    "amap-sat": {
+        "name": "高德地图 - 卫星影像",
+        "url": "https://wprd02.is.autonavi.com//appmaptile?lang=zh_cn&size=1&scale=1&style=6&x={x}&y={y}&z={z}",
+        "min_zoom": 3,
+        "max_zoom": 18,
+    },
+    "tencent-vec": {
+        "name": "腾讯地图 - 矢量地图",
+        "url": "http://rt0.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0",
+        "min_zoom": 3,
+        "max_zoom": 18,
+    },
+}
 
 
-def get_cache_dir() -> str:
+def get_cache_dir() -> Path:
     """
     Get the cache directory from the environment variable or default to the app directory.
 
     Returns:
         str: The path to the cache directory.
     """
-    env_cache = os.getenv("GCJRE_CACHE", "")
+    env_cache = os.getenv("GCJRE_CACHE")
     if env_cache:
-        print(f"Using cache directory from environment: {env_cache}")
-        return env_cache
-    print(f"Using current directory for cache: {Path.cwd().joinpath('cache')}")
-    return str(Path.cwd().joinpath("cache"))
+        # print(f"Using cache directory from environment: {env_cache}")
+        env_cache_dir = Path(env_cache)
+        env_cache_dir.mkdir(exist_ok=True)
+        return env_cache_dir
+    current_cache_dir = Path.cwd().joinpath("cache")
+    current_cache_dir.mkdir(exist_ok=True)
+    # print(f"Using current directory for cache: {current_cache_dir}")
+    return current_cache_dir
 
 
-def get_maps():
-    return json.load(open(str(APP_DIR.joinpath("maps.json")), "r", encoding="utf-8"))
+def init_map_config(config_path: Path):
+    map_file_path = config_path.joinpath("maps.json")
+    if not map_file_path.exists():
+        with open(str(map_file_path), "w", encoding="utf-8") as f:
+            json.dump(gcj_maps, f, indent=2, ensure_ascii=False)
+
+
+def get_maps(config_path: Path):
+    map_file_path = config_path.joinpath("maps.json")
+    if not map_file_path.exists():
+        init_map_config(config_path)
+    with open(map_file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data
 
 
 def bytes_to_image(content: bytes) -> Image:
@@ -43,19 +80,19 @@ def bytes_to_image(content: bytes) -> Image:
     return Image.open(BytesIO(content))
 
 
-def image_to_bytes(image: Image, format: str = "PNG") -> bytes:
+def image_to_bytes(image: Image, img_format: str = "PNG") -> bytes:
     """
     Convert a PIL Image to bytes.
 
     Args:
         image (Image): PIL Image object.
-        format (str): Format to save the image, default is "PNG".
+        img_format (str): Format to save the image, default is "PNG".
 
     Returns:
         bytes: Image data in bytes.
     """
     img_buffer = BytesIO()
-    image.save(img_buffer, format=format)
+    image.save(img_buffer, format=img_format)
     img_bytes = img_buffer.getvalue()
     img_buffer.close()
     return img_bytes
