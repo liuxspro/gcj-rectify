@@ -20,6 +20,8 @@ from qgis.core import QgsSettings
 from .qgis_utils import PluginDir, add_raster_layer, log_message, CACHE_DIR
 from .server import ServerManager
 
+tile_icon = QIcon(str(PluginDir / "images" / "tile.svg"))
+
 
 class SettingsDialog(QDialog):
     def __init__(self, parent=None):
@@ -142,11 +144,10 @@ class GCJRectifyPlugin:
         self.menu.addSeparator()
 
         # 添加地图 Action
-        amap_icon = QIcon(str(PluginDir / "images" / "amap.svg"))
         map_data = get_maps(Path(self.get_cache_dir()))
         for mapid in map_data.keys():
             action = QAction(
-                amap_icon, map_data[mapid]["name"], self.iface.mainWindow()
+                tile_icon, map_data[mapid]["name"], self.iface.mainWindow()
             )
             action.triggered.connect(
                 lambda _checked, mid=mapid: self.add_map(self.get_port(), mid)
@@ -164,7 +165,7 @@ class GCJRectifyPlugin:
 
         log_message(f"GCJ-Rectify 插件初始化完成")
         log_message(f"端口: {self.port} 缓存目录: {self.get_cache_dir()}")
-        self.start_server()
+        # self.start_server()
 
     def init_config(self):
         log_message("初始化 GCJRectifyPlugin 插件...")
