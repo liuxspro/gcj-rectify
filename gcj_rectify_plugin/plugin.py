@@ -1,6 +1,8 @@
 from pathlib import Path
 from urllib.parse import quote
 
+from gcj_rectify_server import app
+from gcj_rectify_server.utils import get_maps
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QAction,
@@ -15,22 +17,8 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.core import QgsSettings
 
-from gcj_rectify_server import app
-
-
-from gcj_rectify_server.utils import get_maps
 from .qgis_utils import PluginDir, add_raster_layer, log_message, CACHE_DIR
-
 from .server import ServerManager
-
-
-def add_map(port, mapid):
-    map_url = f"http://localhost:{port}/tiles/{mapid}/{{z}}/{{x}}/{{y}}"
-    map_name = get_maps(CACHE_DIR)[mapid]
-    # URL编码处理
-    encoded_url = quote(map_url, safe=":/?=")
-    uri = f"type=xyz&url={encoded_url}&zmin=3&zmax=18"
-    add_raster_layer(uri, map_name["name"])
 
 
 class SettingsDialog(QDialog):
@@ -161,7 +149,7 @@ class GCJRectifyPlugin:
                 amap_icon, map_data[mapid]["name"], self.iface.mainWindow()
             )
             action.triggered.connect(
-                lambda checked, mid=mapid: add_map(self.get_port(), mid)
+                lambda _checked, mid=mapid: self.add_map(self.get_port(), mid)
             )
             self.add_map_cations.append(action)
 
@@ -174,9 +162,9 @@ class GCJRectifyPlugin:
         for action in self.add_map_cations:
             action.setEnabled(False)
 
-        log_message(
-            f"GCJ-Rectify 插件初始化完成\n端口: {self.port} 缓存目录: {self.get_cache_dir()}"
-        )
+        log_message(f"GCJ-Rectify 插件初始化完成")
+        log_message(f"端口: {self.port} 缓存目录: {self.get_cache_dir()}")
+        self.start_server()
 
     def init_config(self):
         log_message("初始化 GCJRectifyPlugin 插件...")
@@ -194,6 +182,14 @@ class GCJRectifyPlugin:
     def get_cache_dir(self):
         """获取当前缓存目录"""
         return self.conf.value("gcj-rectify/cache_dir", str(CACHE_DIR), type=str)
+
+    def add_map(self, port, mapid):
+        map_url = f"http://localhost:{port}/tiles/{mapid}/{{z}}/{{x}}/{{y}}"
+        map_data = get_maps(Path(self.get_cache_dir()))[mapid]
+        # URL编码处理
+        encoded_url = quote(map_url, safe=":/?=")
+        uri = f"type=xyz&url={encoded_url}&zmin={map_data['min_zoom']}&zmax={map_data['max_zoom']}"
+        add_raster_layer(uri, map_data["name"])
 
     def start_server(self):
         self.app.state.cache_dir = Path(self.get_cache_dir())
