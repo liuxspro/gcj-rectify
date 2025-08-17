@@ -23,3 +23,5 @@ uvx gcj-rectify
 ## 缓存位置设置
 
 缓存目录默认为`<cwd>/cache`, 通过环境变量 `GCJRE_CACHE` 来设置缓存目录
+
+编辑缓存目录下的`maps.json`来增减地图
