@@ -17,6 +17,12 @@ gcj_maps = {
         "min_zoom": 3,
         "max_zoom": 18,
     },
+    "amap-labels": {
+        "name": "高德地图 - 矢量注记",
+        "url": "http://wprd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+        "min_zoom": 3,
+        "max_zoom": 18,
+    },
     "amap-sat": {
         "name": "高德地图 - 卫星影像",
         "url": "https://wprd02.is.autonavi.com//appmaptile?lang=zh_cn&size=1&scale=1&style=6&x={x}&y={y}&z={z}",
@@ -28,6 +34,18 @@ gcj_maps = {
         "url": "http://rt0.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector&style=0",
         "min_zoom": 3,
         "max_zoom": 18,
+    },
+    "google-street": {
+        "name": "Google - Road",
+        "url": "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=zh-CN",
+        "min_zoom": 0,
+        "max_zoom": 20,
+    },
+    "google-lables": {
+        "name": "Google - Labels",
+        "url": "https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&hl=zh-CN",
+        "min_zoom": 2,
+        "max_zoom": 20,
     },
 }
 
