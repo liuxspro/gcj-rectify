@@ -4,6 +4,7 @@ from urllib.parse import quote
 from gcj_rectify_server import app
 from gcj_rectify_server.utils import get_maps
 from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QT_VERSION_STR
 from qgis.PyQt.QtWidgets import (
     QAction,
     QDialog,
@@ -21,6 +22,7 @@ from .qgis_utils import PluginDir, add_raster_layer, log_message, CACHE_DIR
 from .server import ServerManager
 
 tile_icon = QIcon(str(PluginDir / "images" / "tile.svg"))
+QT_MAJOR_VERSION = int(QT_VERSION_STR.split(".")[0])
 
 
 class SettingsDialog(QDialog):
@@ -224,7 +226,10 @@ class GCJRectifyPlugin:
     def show_settings_dialog(self):
         # 默认值可根据实际情况传递
         dlg = SettingsDialog(self.iface.mainWindow())
-        dlg.exec_()
+        if QT_MAJOR_VERSION == 5:
+            dlg.exec_()
+        if QT_MAJOR_VERSION == 6:
+            dlg.exec()
 
     def unload(self):
         """从QGIS界面卸载插件"""
