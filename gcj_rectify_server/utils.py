@@ -52,21 +52,26 @@ gcj_maps = {
 
 def get_cache_dir() -> Path:
     """
-    Get the cache directory from the environment variable or default to the app directory.
+    Get the cache directory from the environment variable or default to a platform-appropriate location.
+
+    Priority:
+    1. GCJRE_CACHE environment variable
+    2. Platform default: ~/.cache/gcj-rectify-cache
 
     Returns:
-        str: The path to the cache directory.
+        Path: The path to the cache directory.
     """
     env_cache = os.getenv("GCJRE_CACHE")
     if env_cache:
-        # print(f"Using cache directory from environment: {env_cache}")
         env_cache_dir = Path(env_cache)
-        env_cache_dir.mkdir(exist_ok=True)
+        env_cache_dir.mkdir(parents=True, exist_ok=True)
         return env_cache_dir
-    current_cache_dir = Path.cwd().joinpath("cache")
-    current_cache_dir.mkdir(exist_ok=True)
-    # print(f"Using current directory for cache: {current_cache_dir}")
-    return current_cache_dir
+
+    # Use ~/.cache/gcj-rectify-cache as the default cache location
+    # This works reliably on both macOS and Linux, and also on Windows
+    cache_dir = Path.home() / ".cache" / "gcj-rectify-cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir
 
 
 def init_map_config(config_path: Path):
