@@ -1,4 +1,6 @@
-# justfile for gcj-rectify project
+# list all available recipes
+default:
+    @just --list
 
 # read plugin version from metadata.txt
 _plugin_version := `grep "^version=" gcj_rectify_plugin/metadata.txt | sed 's/version=//' | tr -d '\r\n'`
@@ -10,3 +12,7 @@ plugin_pack: _clean_dist
 
 _clean_dist:
     rm -rf dist
+
+# run the development server
+dev:
+    uv run uvicorn gcj_rectify_server:app --host 0.0.0.0 --port 8000
