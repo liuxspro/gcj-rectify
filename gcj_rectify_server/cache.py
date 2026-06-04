@@ -115,37 +115,32 @@ class TileCache:
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.init_datebase()
 
-    def normalize_mapid(self, mapid):
-        return mapid.replace("-", "_")
-
     def init_datebase(self):
         print(f"Initializing database {self.cache_name}...")
-        cursor = self.conn.cursor()
-        for key in self.maps.keys():
-            cursor.execute(
-                f"CREATE TABLE IF NOT EXISTS {self.normalize_mapid(key)} ("
-                "  z INTEGER NOT NULL,"
-                "  x INTEGER NOT NULL,"
-                "  y INTEGER NOT NULL,"
-                "  data BLOB,"
-                "  PRIMARY KEY (z, x, y)"
-                ")"
-            )
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS tiles ("
+            "  mapid TEXT NOT NULL,"
+            "  z INTEGER NOT NULL,"
+            "  x INTEGER NOT NULL,"
+            "  y INTEGER NOT NULL,"
+            "  data BLOB,"
+            "  PRIMARY KEY (mapid, z, x, y)"
+            ")"
+        )
         self.conn.commit()
 
     def cache_tile(self, mapid, z, x, y, data):
-        cursor = self.conn.cursor()
-        cursor.execute(
-            f"INSERT OR REPLACE INTO {self.normalize_mapid(mapid)} (z, x, y, data) VALUES (?, ?, ?, ?)",
-            (z, x, y, data),
+        self.conn.execute(
+            "INSERT OR REPLACE INTO tiles (mapid, z, x, y, data) VALUES (?, ?, ?, ?, ?)",
+            (mapid, z, x, y, data),
         )
         self.conn.commit()
 
     def get_tile_from_cache(self, mapid, z, x, y):
         cursor = self.conn.cursor()
         cursor.execute(
-            f"SELECT data FROM {self.normalize_mapid(mapid)} WHERE z = ? AND x = ? AND y = ?",
-            (z, x, y),
+            "SELECT data FROM tiles WHERE mapid = ? AND z = ? AND x = ? AND y = ?",
+            (mapid, z, x, y),
         )
         result = cursor.fetchone()
         return result[0] if result else None
