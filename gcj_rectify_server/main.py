@@ -1,10 +1,11 @@
 import argparse
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request, Response
 
-from .cache import TileCache, WGS84TileCache
+from .cache import get_gcj_cache, get_wgs84_cache
 from .fetch import reset_async_client
 from .utils import get_cache_dir, get_maps
 
@@ -56,16 +57,12 @@ async def tile(map_id: str, z: int, x: int, y: int, request: Request):
         z (int): Zoom level.
         x (int): Tile column number.
         y (int): Tile row number.
-        request: Fastapi Request
     """
-    state_cache_dir = request.app.state.cache_dir
-    cache = TileCache()
-    wgs84_cache = WGS84TileCache()
-
+    cache_dir: Path = request.app.state.cache_dir
     if z <= 9:
-        img_bytes = await cache.get_tile(map_id, z, x, y)
+        img_bytes = await get_gcj_cache(cache_dir).get_tile(map_id, z, x, y)
     else:
-        img_bytes = await wgs84_cache.get_tile(map_id, z, x, y)
+        img_bytes = await get_wgs84_cache(cache_dir).get_tile(map_id, z, x, y)
     if img_bytes is None:
         # 如果获取瓦片失败，返回空图片或错误响应
         return Response(status_code=500, content="Failed to fetch tile")

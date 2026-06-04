@@ -1,13 +1,13 @@
 import asyncio
 import sqlite3
 from io import BytesIO
+from pathlib import Path
 
 from PIL import Image
 
 from .fetch import fetch_tile
 from .utils import (
-    gcj_maps,
-    get_cache_dir,
+    get_maps,
     image_to_bytes,
     lonlat_to_xyz,
     wgsbbox_to_gcjbbox,
@@ -41,14 +41,14 @@ async def get_tile_gcj(z: int, x: int, y: int, mapid: str, map_data) -> bytes:
     return content
 
 
-async def get_tile_wgs(z: int, x: int, y: int, mapid: str) -> bytes | None:
+async def get_tile_wgs(
+    z: int, x: int, y: int, mapid: str, cache_dir: Path
+) -> bytes | None:
     """
     获取瓦片(调整为 WGS84 坐标系)
     """
     if z <= 9:
         return None
-    gcj_cache = TileCache()
-
     wgs_bbox = xyz_to_bbox(x, y, z)
     gcj_bbox = wgsbbox_to_gcjbbox(wgs_bbox)
     left_upper, right_lower = gcj_bbox
@@ -58,6 +58,7 @@ async def get_tile_wgs(z: int, x: int, y: int, mapid: str) -> bytes | None:
     x_max, y_max = lonlat_to_xyz(right_lower[0], right_lower[1], z)  # 右下角
 
     # 创建任务列表，异步获取所有需要的瓦片
+    gcj_cache = get_gcj_cache(cache_dir)
     tasks = []
     for ax in range(x_min, x_max + 1):
         for ay in range(y_min, y_max + 1):
@@ -103,9 +104,15 @@ async def get_tile_wgs(z: int, x: int, y: int, mapid: str) -> bytes | None:
 
 
 class TileCache:
-    def __init__(self):
-        self.cache_name = "cache.db"
-        self.conn = sqlite3.connect(get_cache_dir() / self.cache_name)
+    def __init__(self, cache_dir: Path, db_name="cache.db"):
+        self.cache_dir = cache_dir
+        self.cache_name = db_name
+        self.maps = get_maps(cache_dir)
+        self.conn = sqlite3.connect(
+            cache_dir / self.cache_name,
+            check_same_thread=False,
+        )
+        self.conn.execute("PRAGMA journal_mode=WAL")
         self.init_datebase()
 
     def normalize_mapid(self, mapid):
@@ -114,17 +121,22 @@ class TileCache:
     def init_datebase(self):
         print(f"Initializing database {self.cache_name}...")
         cursor = self.conn.cursor()
-        keys = gcj_maps.keys()
-        for key in keys:
+        for key in self.maps.keys():
             cursor.execute(
-                f"CREATE TABLE IF NOT EXISTS {self.normalize_mapid(key)} (z INTEGER, x INTEGER, y INTEGER, data BLOB)"
+                f"CREATE TABLE IF NOT EXISTS {self.normalize_mapid(key)} ("
+                "  z INTEGER NOT NULL,"
+                "  x INTEGER NOT NULL,"
+                "  y INTEGER NOT NULL,"
+                "  data BLOB,"
+                "  PRIMARY KEY (z, x, y)"
+                ")"
             )
         self.conn.commit()
 
     def cache_tile(self, mapid, z, x, y, data):
         cursor = self.conn.cursor()
         cursor.execute(
-            f"INSERT INTO {self.normalize_mapid(mapid)} ( z, x, y, data) VALUES (?, ?, ?, ?)",
+            f"INSERT OR REPLACE INTO {self.normalize_mapid(mapid)} (z, x, y, data) VALUES (?, ?, ?, ?)",
             (z, x, y, data),
         )
         self.conn.commit()
@@ -141,27 +153,39 @@ class TileCache:
     async def get_tile(self, mapid, z, x, y):
         tile = self.get_tile_from_cache(mapid, z, x, y)
         if tile is None:
-            tile = await get_tile_gcj(z, x, y, mapid, gcj_maps)
+            tile = await get_tile_gcj(z, x, y, mapid, self.maps)
             if tile:
                 self.cache_tile(mapid, z, x, y, tile)
         return tile
 
 
 class WGS84TileCache(TileCache):
-    def __init__(self):
-        self.cache_name = "wgs84_cache.db"
-        self.conn = sqlite3.connect(get_cache_dir() / self.cache_name)
-        self.init_datebase()
+    def __init__(self, cache_dir: Path):
+        super().__init__(cache_dir, db_name="wgs84_cache.db")
 
     async def get_tile(self, mapid, z, x, y):
         tile = self.get_tile_from_cache(mapid, z, x, y)
         if tile is None:
-            tile = await get_tile_wgs(
-                z,
-                x,
-                y,
-                mapid,
-            )
+            tile = await get_tile_wgs(z, x, y, mapid, self.cache_dir)
             if tile:
                 self.cache_tile(mapid, z, x, y, tile)
         return tile
+
+
+# 按缓存目录缓存 SQLite 连接实例，同一个目录复用同一个连接
+_gcj_cache_instances: dict[str, TileCache] = {}
+_wgs84_cache_instances: dict[str, WGS84TileCache] = {}
+
+
+def get_gcj_cache(cache_dir: Path) -> TileCache:
+    key = str(cache_dir)
+    if key not in _gcj_cache_instances:
+        _gcj_cache_instances[key] = TileCache(cache_dir)
+    return _gcj_cache_instances[key]
+
+
+def get_wgs84_cache(cache_dir: Path) -> WGS84TileCache:
+    key = str(cache_dir)
+    if key not in _wgs84_cache_instances:
+        _wgs84_cache_instances[key] = WGS84TileCache(cache_dir)
+    return _wgs84_cache_instances[key]
