@@ -90,7 +90,7 @@ def get_maps(config_path: Path):
     return data
 
 
-def bytes_to_image(content: bytes) -> Image:
+def bytes_to_image(content: bytes) -> Image.Image:
     """
     Convert bytes to a PIL Image.
 
@@ -103,7 +103,7 @@ def bytes_to_image(content: bytes) -> Image:
     return Image.open(BytesIO(content))
 
 
-def image_to_bytes(image: Image, img_format: str = "PNG") -> bytes:
+def image_to_bytes(image: Image.Image, img_format: str = "PNG") -> bytes:
     """
     Convert a PIL Image to bytes.
 

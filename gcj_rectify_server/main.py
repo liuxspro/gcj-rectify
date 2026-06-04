@@ -3,10 +3,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, Response, Request
+from fastapi import FastAPI, Request, Response
 
+from .cache import get_gcj_cache, get_wgs84_cache
 from .fetch import reset_async_client
-from .rectify import get_tile_gcj_cached, get_tile_wgs_cached
 from .utils import get_cache_dir, get_maps
 
 
@@ -31,7 +31,7 @@ app = FastAPI(lifespan=lifespan)
 app.state.cache_dir = get_cache_dir()
 
 print(f"Cache Dir: {app.state.cache_dir}")
-print(f"Map Config: {app.state.cache_dir.joinpath("maps.json")}")
+print(f"Map Config: {app.state.cache_dir.joinpath('maps.json')}")
 
 
 @app.get("/")
@@ -57,15 +57,12 @@ async def tile(map_id: str, z: int, x: int, y: int, request: Request):
         z (int): Zoom level.
         x (int): Tile column number.
         y (int): Tile row number.
-        request: Fastapi Request
     """
-    state_cache_dir = request.app.state.cache_dir
-
+    cache_dir: Path = request.app.state.cache_dir
     if z <= 9:
-        # For zoom levels 9 and below, use GCJ02 tiles directly
-        img_bytes = await get_tile_gcj_cached(x, y, z, map_id, state_cache_dir)
+        img_bytes = await get_gcj_cache(cache_dir).get_tile(map_id, z, x, y)
     else:
-        img_bytes = await get_tile_wgs_cached(x, y, z, map_id, state_cache_dir)
+        img_bytes = await get_wgs84_cache(cache_dir).get_tile(map_id, z, x, y)
     if img_bytes is None:
         # 如果获取瓦片失败，返回空图片或错误响应
         return Response(status_code=500, content="Failed to fetch tile")
