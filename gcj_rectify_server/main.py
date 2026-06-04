@@ -1,10 +1,10 @@
 import argparse
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, Response, Request
+from fastapi import FastAPI, Request, Response
 
+from .cache import TileCache
 from .fetch import reset_async_client
 from .rectify import get_tile_gcj_cached, get_tile_wgs_cached
 from .utils import get_cache_dir, get_maps
@@ -31,7 +31,7 @@ app = FastAPI(lifespan=lifespan)
 app.state.cache_dir = get_cache_dir()
 
 print(f"Cache Dir: {app.state.cache_dir}")
-print(f"Map Config: {app.state.cache_dir.joinpath("maps.json")}")
+print(f"Map Config: {app.state.cache_dir.joinpath('maps.json')}")
 
 
 @app.get("/")
@@ -60,10 +60,13 @@ async def tile(map_id: str, z: int, x: int, y: int, request: Request):
         request: Fastapi Request
     """
     state_cache_dir = request.app.state.cache_dir
+    cache = TileCache()
 
     if z <= 9:
+        img_bytes = await cache.get_tile(map_id, z, x, y)
+        # if img_bytes is None:
         # For zoom levels 9 and below, use GCJ02 tiles directly
-        img_bytes = await get_tile_gcj_cached(x, y, z, map_id, state_cache_dir)
+        # img_bytes = await get_tile_gcj_cached(x, y, z, map_id, state_cache_dir)
     else:
         img_bytes = await get_tile_wgs_cached(x, y, z, map_id, state_cache_dir)
     if img_bytes is None:
