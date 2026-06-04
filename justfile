@@ -15,4 +15,4 @@ _clean_dist:
 
 # run the development server
 dev:
-    uv run uvicorn gcj_rectify_server:app --host 0.0.0.0 --port 8000
+    uv run uvicorn gcj_rectify_server:app --reload

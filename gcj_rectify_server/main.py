@@ -4,9 +4,8 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI, Request, Response
 
-from .cache import TileCache
+from .cache import TileCache, WGS84TileCache
 from .fetch import reset_async_client
-from .rectify import get_tile_gcj_cached, get_tile_wgs_cached
 from .utils import get_cache_dir, get_maps
 
 
@@ -61,14 +60,12 @@ async def tile(map_id: str, z: int, x: int, y: int, request: Request):
     """
     state_cache_dir = request.app.state.cache_dir
     cache = TileCache()
+    wgs84_cache = WGS84TileCache()
 
     if z <= 9:
         img_bytes = await cache.get_tile(map_id, z, x, y)
-        # if img_bytes is None:
-        # For zoom levels 9 and below, use GCJ02 tiles directly
-        # img_bytes = await get_tile_gcj_cached(x, y, z, map_id, state_cache_dir)
     else:
-        img_bytes = await get_tile_wgs_cached(x, y, z, map_id, state_cache_dir)
+        img_bytes = await wgs84_cache.get_tile(map_id, z, x, y)
     if img_bytes is None:
         # 如果获取瓦片失败，返回空图片或错误响应
         return Response(status_code=500, content="Failed to fetch tile")
