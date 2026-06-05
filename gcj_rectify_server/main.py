@@ -34,6 +34,7 @@ app.state.cache_dir = get_cache_dir()
 
 print(f"Cache Dir: {app.state.cache_dir}")
 print(f"Map Config: {app.state.cache_dir.joinpath('maps.json')}")
+print("WMTS Capabilities: http://<host>:<port>/wmts (启动后可访问)")
 
 
 @app.get("/")
@@ -129,4 +130,5 @@ def run(host: str = "0.0.0.0", port: int = 8000):
     args = parser.parse_args()
 
     print(f"Server Runing At: http://{args.host}:{args.port}")
+    print(f"WMTS Capabilities: http://{args.host}:{args.port}/wmts")
     uvicorn.run(app, host=args.host, port=args.port)
