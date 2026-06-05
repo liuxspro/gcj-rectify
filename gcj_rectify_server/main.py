@@ -9,6 +9,8 @@ from .cache import get_gcj_cache, get_wgs84_cache
 from .fetch import reset_async_client
 from .utils import get_cache_dir, get_maps
 
+WMTS_TEMPLATE_PATH = Path(__file__).parent / "wmts.xml"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,6 +47,47 @@ def get_config(request: Request):
         "cache_dir": str(request.app.state.cache_dir),
         "maps": get_maps(request.app.state.cache_dir),
     }
+
+
+@app.get("/wmts")
+async def wmts(request: Request):
+    """WMTS GetCapabilities 能力文档"""
+    maps = get_maps(request.app.state.cache_dir)
+    base_url = str(request.base_url).rstrip("/")
+
+    # 为每个地图生成 Layer 元素
+    layers_xml = ""
+    for map_id, info in maps.items():
+        name = info["name"]
+        layer = f"""    <Layer>
+      <ows:Title>{name}</ows:Title>
+      <ows:Abstract>{name}</ows:Abstract>
+      <ows:WGS84BoundingBox>
+        <ows:LowerCorner>-180 -85.051129</ows:LowerCorner>
+        <ows:UpperCorner>180 85.051129</ows:UpperCorner>
+      </ows:WGS84BoundingBox>
+      <ows:Identifier>{map_id}</ows:Identifier>
+      <Style>
+        <ows:Identifier>default</ows:Identifier>
+      </Style>
+      <Format>image/png</Format>
+      <TileMatrixSetLink>
+        <TileMatrixSet>WebMercatorQuad</TileMatrixSet>
+      </TileMatrixSetLink>
+      <ResourceURL
+                format="image/png"
+                resourceType="tile"
+                template="{base_url}/tiles/{map_id}/{{TileMatrix}}/{{TileCol}}/{{TileRow}}"
+            />
+    </Layer>
+"""
+        layers_xml += layer
+
+    # 读取模板，将 {{layer}} 替换为动态生成的 Layer
+    template = WMTS_TEMPLATE_PATH.read_text(encoding="utf-8")
+    wmts_xml = template.replace("{{layer}}", layers_xml)
+
+    return Response(content=wmts_xml, media_type="application/xml")
 
 
 @app.get("/tiles/{map_id}/{z}/{x}/{y}")
