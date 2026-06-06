@@ -1,6 +1,6 @@
 # gcj-rectify
 
-将 GCJ-02（火星坐标系）地图瓦片实时纠正为 WGS-84 坐标系，作为 QGIS 插件使用。
+将 GCJ-02（火星坐标系）地图瓦片实时纠正为 WGS-84 坐标系，提供标准 WMTS 服务。
 
 ## 安装
 
@@ -26,12 +26,6 @@ uv run uvicorn gcj_rectify_server:app --reload
 
 ```bash
 uv run uvicorn gcj_rectify_server:app --host 0.0.0.0 --port 8000
-```
-
-直接使用 `uvx` 运行：
-
-```bash
-uvx gcj-rectify
 ```
 
 ## 缓存
@@ -64,7 +58,3 @@ GCJRE_CACHE=/path/to/cache uvx gcj-rectify
   }
 }
 ```
-
-## QGIS 插件
-
-插件位于 `gcj_rectify_plugin` 目录，提供图形界面管理服务启停和地图加载。
