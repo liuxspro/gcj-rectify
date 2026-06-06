@@ -36,15 +36,15 @@ gcj_maps = {
         "max_zoom": 18,
     },
     "google-street": {
-        "name": "Google - Road",
+        "name": "Google - Street",
         "url": "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=zh-CN",
-        "min_zoom": 0,
+        "min_zoom": 1,
         "max_zoom": 20,
     },
     "google-lables": {
         "name": "Google - Labels",
         "url": "https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&hl=zh-CN",
-        "min_zoom": 2,
+        "min_zoom": 1,
         "max_zoom": 20,
     },
 }

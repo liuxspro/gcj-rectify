@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GCJ Rectify 服务</title>
+    <script src="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.js"></script>
+    <link
+      href="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/maplibre-gl-compare.css" />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+        background: #f0f2f5;
+        color: #333;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header {
+        background: linear-gradient(135deg, #1a73e8, #0d47a1);
+        color: #fff;
+        padding: 30px 0 32px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      header .subtitle {
+        font-size: 15px;
+        opacity: 0.85;
+        line-height: 1.6;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: -20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        transition: box-shadow 0.2s;
+      }
+
+      .card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      }
+
+      .card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #1a73e8;
+      }
+
+      .card p,
+      .card ul {
+        font-size: 14px;
+        line-height: 1.7;
+        color: #555;
+      }
+
+      .card ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .card ul li {
+        padding: 4px 0;
+      }
+
+      .card ul li::before {
+        content: "\2022";
+        color: #1a73e8;
+        font-weight: bold;
+        margin-right: 8px;
+      }
+
+      .card .label {
+        display: inline-block;
+        background: #e8f0fe;
+        color: #1a73e8;
+        font-size: 12px;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-weight: 500;
+        margin-right: 6px;
+        margin-bottom: 4px;
+      }
+
+      .card code {
+        background: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #d63384;
+        word-break: break-all;
+      }
+
+      .card a {
+        color: #1a73e8;
+        text-decoration: none;
+      }
+
+      .card a:hover {
+        text-decoration: underline;
+      }
+
+      .map-section {
+        margin-top: 32px;
+        margin-bottom: 40px;
+      }
+
+      .map-section h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #333;
+      }
+
+      .map-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .map-controls label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #555;
+      }
+
+      .map-controls select {
+        padding: 6px 12px;
+        border: 1px solid #d0d0d0;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #fff;
+        cursor: pointer;
+        outline: none;
+        min-width: 180px;
+      }
+
+      .map-controls select:focus {
+        border-color: #1a73e8;
+        box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+      }
+
+      .map-controls .hint {
+        font-size: 13px;
+        color: #999;
+        margin-left: auto;
+      }
+
+      /* --- Compare container --- */
+      #comparison-container {
+        width: 100%;
+        height: 500px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        position: relative;
+        background: #e8e8e8;
+      }
+
+      .compare-map {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .compare-map .maplibregl-ctrl-top-left {
+        top: 10px;
+        left: 10px;
+      }
+
+      .compare-map .maplibregl-ctrl-bottom-right {
+        display: none;
+      }
+
+      /* Override compare plugin styles */
+      .maplibregl-compare {
+        background: #fff;
+        width: 4px;
+        z-index: 10;
+      }
+      .maplibregl-compare .compare-swiper-vertical {
+        background-color: #fff;
+        border: 3px solid #1a73e8;
+        width: 44px;
+        height: 44px;
+        left: -22px;
+        margin-top: -22px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        background-image: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1a73e8;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .maplibregl-compare .compare-swiper-vertical::after {
+        content: "\2194";
+      }
+
+      footer {
+        text-align: center;
+        padding: 24px 0;
+        font-size: 13px;
+        color: #999;
+        border-top: 1px solid #e8e8e8;
+        margin-top: 16px;
+      }
+
+      footer a {
+        color: #1a73e8;
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 640px) {
+        header {
+          padding: 28px 0 24px;
+        }
+        header h1 {
+          font-size: 22px;
+        }
+        .cards {
+          margin-top: -12px;
+          gap: 14px;
+        }
+        #comparison-container {
+          height: 320px;
+        }
+        .map-controls .hint {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>🗺️ GCJ Rectify 服务</h1>
+        <p class="subtitle">
+          将 GCJ-02（火星坐标系）地图瓦片实时纠正为 WGS-84 坐标系，<br />
+          作为 QGIS / Leaflet 等 GIS 客户端的标准 WMTS 数据源使用。
+        </p>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="cards">
+        <div class="card">
+          <h3>📡 WMTS 端点</h3>
+          <p>
+            WMTS GetCapabilities：<br />
+            <a href="/wmts" target="_blank"><code id="wmts-url">/wmts</code></a>
+          </p>
+          <p style="margin-top: 8px">
+            瓦片地址格式：<br />
+            <code>/tiles/{map_id}/{z}/{x}/{y}</code>
+          </p>
+          <hr
+            style="margin: 14px 0; border: none; border-top: 1px solid #eee"
+          />
+          <p style="font-size: 14px; line-height: 1.7; color: #555">
+            在 QGIS/Arcmap 中添加 <strong>WMS/WMTS</strong> 连接，<br />
+            填写 URL 为当前服务的 <code>/wmts</code> 地址即可加载。
+          </p>
+          <p style="margin-top: 8px; font-size: 13px; color: #999">
+            也可用 Leaflet、OpenLayers 等前端库直接使用。
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🗂️ 可用地图</h3>
+          <ul id="map-list">
+            <li>加载中…</li>
+          </ul>
+        </div>
+      </div>
+
+      <section class="map-section">
+        <h2>
+          🖼️ 地图预览
+          <span style="font-size: 14px; font-weight: 400; color: #999"
+            >← 纠正瓦片 / OSM 底图 →</span
+          >
+        </h2>
+        <div class="map-controls">
+          <label for="map-select">纠正图源：</label>
+          <select id="map-select" disabled>
+            <option value="">加载地图列表…</option>
+          </select>
+          <span class="hint">↔ 拖拽滑块对比 OSM 底图</span>
+        </div>
+        <div id="comparison-container">
+          <div id="before-map" class="compare-map"></div>
+          <div id="after-map" class="compare-map"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">GCJ Rectify &mdash; 基于 FastAPI 构建</div>
+    </footer>
+
+    <script src="/static/maplibre-gl-compare.js"></script>
+    <script>
+      (function () {
+        // --- DOM refs ---
+        var mapListEl = document.getElementById("map-list");
+        var mapSelectEl = document.getElementById("map-select");
+        var wmtsUrlEl = document.getElementById("wmts-url");
+
+        var maps = {};
+        var mapKeys = [];
+        var beforeMap = null;
+        var afterMap = null;
+        var compare = null;
+        var currentMapId = null;
+
+        // --- OSM raster style (inline, no token needed) ---
+        function osmStyle() {
+          return {
+            version: 8,
+            sources: {
+              osm: {
+                type: "raster",
+                tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                tileSize: 256,
+                attribution:
+                  '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+              },
+            },
+            layers: [{ id: "osm", type: "raster", source: "osm" }],
+          };
+        }
+
+        // --- Rectified tiles style ---
+        function rectifiedStyle(mapId) {
+          return {
+            version: 8,
+            sources: {
+              rectified: {
+                type: "raster",
+                tiles: ["/tiles/" + mapId + "/{z}/{x}/{y}"],
+                tileSize: 256,
+              },
+            },
+            layers: [{ id: "rectified", type: "raster", source: "rectified" }],
+          };
+        }
+
+        // --- Initialize or switch maps ---
+        function setMaps(mapId) {
+          var show = !!mapId;
+          currentMapId = mapId;
+
+          // Destroy previous compare and maps
+          if (compare) {
+            compare.remove();
+            compare = null;
+          }
+          if (beforeMap) {
+            beforeMap.remove();
+            beforeMap = null;
+          }
+          if (afterMap) {
+            afterMap.remove();
+            afterMap = null;
+          }
+
+          // Clear container contents
+          document.getElementById("before-map").innerHTML = "";
+          document.getElementById("after-map").innerHTML = "";
+
+          if (!show) return;
+
+          var container = document.getElementById("comparison-container");
+          const center = [117.147541, 34.238288];
+
+          // Create before map (rectified tiles, left side)
+          beforeMap = new maplibregl.Map({
+            container: "before-map",
+            style: rectifiedStyle(mapId),
+            center: center,
+            zoom: 12,
+            attributionControl: false,
+          });
+
+          // Create after map (OSM, right side)
+          afterMap = new maplibregl.Map({
+            container: "after-map",
+            style: osmStyle(),
+            center: center,
+            zoom: 12,
+            attributionControl: false,
+          });
+
+          // Wait for both maps to load before creating compare
+          var loaded = 0;
+          var hasError = false;
+
+          function onLoad() {
+            loaded++;
+            if (loaded >= 2 && !hasError) {
+              compare = new maplibregl.Compare(beforeMap, afterMap, container, {
+                orientation: "vertical",
+              });
+            }
+          }
+
+          function onError(e) {
+            hasError = true;
+            console.error("Map load error:", e);
+          }
+
+          beforeMap.on("load", onLoad);
+          afterMap.on("load", onLoad);
+          beforeMap.on("error", onError);
+          afterMap.on("error", onError);
+        }
+
+        // --- Fetch config ---
+        (async function loadConfig() {
+          try {
+            var res = await fetch("/config");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            var config = await res.json();
+            wmtsUrlEl.textContent = window.location.origin + "/wmts";
+
+            maps = config.maps || {};
+            mapKeys = Object.keys(maps);
+
+            var listHtml = mapKeys
+              .map(function (key) {
+                var m = maps[key];
+                console.log(m);
+                return (
+                  '<li><span class="label">' +
+                  key +
+                  "</span> " +
+                  m.name +
+                  " (缩放: " +
+                  (m.min_zoom || "?") +
+                  "\u2013" +
+                  (m.max_zoom || "?") +
+                  ")</li>"
+                );
+              })
+              .join("");
+            mapListEl.innerHTML =
+              listHtml || '<li style="color:#999;">暂无地图配置</li>';
+
+            var optHtml = "";
+            for (var i = 0; i < mapKeys.length; i++) {
+              var key = mapKeys[i];
+              var m = maps[key];
+              optHtml +=
+                '<option value="' +
+                key +
+                '">' +
+                m.name +
+                " (" +
+                key +
+                ")</option>";
+            }
+            mapSelectEl.innerHTML = optHtml;
+            mapSelectEl.disabled = false;
+
+            if (mapKeys.length > 0) {
+              mapSelectEl.value = mapKeys[0];
+              setMaps(mapKeys[0]);
+            }
+          } catch (err) {
+            mapListEl.innerHTML =
+              '<li style="color:#d32f2f;">\u274c 无法获取地图列表</li>';
+            mapSelectEl.innerHTML = '<option value="">加载失败</option>';
+            console.error("Failed to fetch config:", err);
+          }
+        })();
+
+        mapSelectEl.addEventListener("change", function () {
+          setMaps(this.value || null);
+        });
+      })();
+    </script>
+  </body>
+</html>
