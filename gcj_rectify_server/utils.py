@@ -36,7 +36,7 @@ gcj_maps = {
         "max_zoom": 18,
     },
     "google-street": {
-        "name": "Google - Road",
+        "name": "Google - Street",
         "url": "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=zh-CN",
         "min_zoom": 1,
         "max_zoom": 20,

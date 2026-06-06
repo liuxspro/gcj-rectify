@@ -4,6 +4,8 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from .cache import get_gcj_cache, get_wgs84_cache
 from .fetch import reset_async_client
@@ -32,14 +34,21 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.state.cache_dir = get_cache_dir()
 
+# 挂载静态文件目录
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
 print(f"Cache Dir: {app.state.cache_dir}")
 print(f"Map Config: {app.state.cache_dir.joinpath('maps.json')}")
-print("WMTS Capabilities: http://<host>:<port>/wmts (启动后可访问)")
+
+
+INDEX_HTML_PATH = Path(__file__).parent / "index.html"
 
 
 @app.get("/")
 def index():
-    return {"message": "Server is Running"}
+    return HTMLResponse(content=INDEX_HTML_PATH.read_text(encoding="utf-8"))
 
 
 @app.get("/config")
