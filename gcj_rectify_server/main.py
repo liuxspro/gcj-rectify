@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from . import __version__
 from .cache import get_gcj_cache, get_wgs84_cache
 from .fetch import reset_async_client
 from .utils import get_cache_dir, get_maps
@@ -48,11 +49,19 @@ def index():
     return FileResponse(static_dir / "index.html")
 
 
-@app.get("/config")
-def get_config(request: Request):
+@app.get("/maps")
+def maps(request: Request):
     return {
-        "cache_dir": str(request.app.state.cache_dir),
         "maps": get_maps(request.app.state.cache_dir),
+    }
+
+
+@app.get("/ping")
+def ping(request: Request):
+    return {
+        "status": "ok",
+        "version": __version__,
+        "cache_dir": str(request.app.state.cache_dir),
     }
 
 

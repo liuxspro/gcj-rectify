@@ -93,7 +93,7 @@
   // --- Fetch config ---
   (async function loadConfig() {
     try {
-      var res = await fetch("/config");
+      var res = await fetch("/maps");
       if (!res.ok) throw new Error("HTTP " + res.status);
       var config = await res.json();
       wmtsUrlEl.textContent = window.location.origin + "/wmts";
@@ -143,6 +143,18 @@
       mapSelectEl.innerHTML = '<option value="">加载失败</option>';
       mapSelectEl.disabled = true;
       console.error("Failed to fetch config:", err);
+    }
+  })();
+
+  // --- Fetch Version ---
+  (async function loadVersion() {
+    try {
+      const res = await fetch("/ping");
+      if (!res.ok) throw new Error("Network response was not ok");
+      const data = await res.json();
+      document.getElementById("version").textContent = "v" + data.version;
+    } catch (err) {
+      console.error("Failed to fetch version:", err);
     }
   })();
 
