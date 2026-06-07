@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN" style="color-scheme: light dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="theme-color"
+      content="#f8f9fa"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0f172a"
+      media="(prefers-color-scheme: dark)"
+    />
+    <title>GCJ Rectify 服务</title>
+    <meta
+      name="description"
+      content="将 GCJ-02 火星坐标系地图瓦片实时纠正为 WGS-84 坐标系，作为 QGIS、Leaflet 等 GIS 客户端的标准 WMTS 数据源使用。"
+    />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin="anonymous" />
+    <link
+      rel="preconnect"
+      href="https://tile.openstreetmap.org"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      as="style"
+      href="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.css"
+    />
+    <script src="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.js"></script>
+    <link
+      href="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/maplibre-gl-compare.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <!-- Skip link for keyboard users -->
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <header>
+      <div class="container">
+        <h1 translate="no">🗺️ GCJ Rectify 服务</h1>
+        <p class="subtitle">
+          将 GCJ-02（火星坐标系）地图瓦片实时纠正为 WGS-84 坐标系，<br />
+          作为 QGIS / Leaflet 等 GIS 客户端的标准 WMTS 数据源使用。
+        </p>
+      </div>
+    </header>
+
+    <main class="main-content" id="main-content">
+      <div class="container main-wrapper">
+        <div class="info-grid">
+          <section class="info-section">
+            <h3>📡 WMTS 端点</h3>
+            <p>
+              在 QGIS / ArcMap 中添加 <strong>WMS/WMTS</strong> 连接，<br />
+              填写 URL 为当前服务的 <code>wmts</code> 地址即可加载。
+            </p>
+            <hr role="presentation" class="section-divider" />
+            <div class="url-display">
+              <a href="/wmts" target="_blank" aria-label="打开 WMTS 能力文档">
+                <code id="wmts-url">/wmts</code>
+              </a>
+            </div>
+            <p style="margin-bottom: 4px">XYZ瓦片格式：</p>
+            <div class="url-display">
+              <code>/tiles/{map_id}/{z}/{x}/{y}</code>
+            </div>
+          </section>
+
+          <section class="info-section">
+            <h3>🗂️ 可用地图</h3>
+            <ul id="map-list" class="map-list" aria-live="polite">
+              <li>加载中…</li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="map-section" aria-label="地图预览与对比">
+          <h2>
+            🖼️ 地图预览
+            <span class="hint-text">← 纠正瓦片 / OSM 底图 →</span>
+          </h2>
+          <div class="map-controls">
+            <label for="map-select">纠正图源：</label>
+            <select id="map-select" disabled>
+              <option value="">加载地图列表…</option>
+            </select>
+            <span class="hint">↔ 拖拽滑块对比 OSM 底图</span>
+          </div>
+          <div
+            id="comparison-container"
+            role="img"
+            aria-label="地图对比，左侧为纠正后瓦片，右侧为 OSM 底图"
+          >
+            <div id="before-map" class="compare-map"></div>
+            <div id="after-map" class="compare-map"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container">GCJ Rectify · 基于 FastAPI 构建</div>
+    </footer>
+
+    <script src="/static/maplibre-gl-compare.js"></script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

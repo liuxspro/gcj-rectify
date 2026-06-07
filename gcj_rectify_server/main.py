@@ -4,7 +4,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .cache import get_gcj_cache, get_wgs84_cache
@@ -43,12 +43,9 @@ print(f"Cache Dir: {app.state.cache_dir}")
 print(f"Map Config: {app.state.cache_dir.joinpath('maps.json')}")
 
 
-INDEX_HTML_PATH = Path(__file__).parent / "index.html"
-
-
 @app.get("/")
 def index():
-    return HTMLResponse(content=INDEX_HTML_PATH.read_text(encoding="utf-8"))
+    return FileResponse(static_dir / "index.html")
 
 
 @app.get("/config")

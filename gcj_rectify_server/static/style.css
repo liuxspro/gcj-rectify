@@ -1,0 +1,467 @@
+/* =============================================================
+   Base Reset & Variables
+   ============================================================= */
+:root {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #dbeafe;
+  --color-primary-dark: #1e40af;
+  --color-bg: #f8f9fa;
+  --color-bg-card: #ffffff;
+  --color-bg-code: #f1f5f9;
+  --color-bg-label: #dbeafe;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #60758c;
+  --color-border: #e2e8f0;
+  --color-error: #dc2626;
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-shadow-hover: rgba(0, 0, 0, 0.14);
+  --color-tile-bg: #e2e8f0;
+  --color-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --spacing-xs: 8px;
+  --spacing-2xs: 4px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --font-mono:
+    "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", Consolas,
+    monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #60a5fa;
+    --color-primary-hover: #93bbfd;
+    --color-primary-light: #1e293b;
+    --color-primary-dark: #93bbfd;
+    --color-bg: #0f172a;
+    --color-bg-card: #1e293b;
+    --color-bg-code: #334155;
+    --color-bg-label: #1e3a5f;
+    --color-text: #f1f5f9;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #889db5;
+    --color-border: #334155;
+    --color-shadow: rgba(0, 0, 0, 0.25);
+    --color-shadow-hover: rgba(0, 0, 0, 0.4);
+    --color-error: #f87171;
+    --color-tile-bg: #334155;
+    --color-focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.35);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================================
+   Skip Link (Accessibility)
+   ============================================================= */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 8px;
+  z-index: 1000;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* =============================================================
+   Container
+   ============================================================= */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* =============================================================
+   Header
+   ============================================================= */
+header {
+  background: var(--color-bg-card);
+  color: var(--color-text);
+  padding: var(--spacing-lg) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-wrap: pretty;
+}
+
+header .subtitle {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+/* =============================================================
+   Main Content
+   ============================================================= */
+.main-content {
+  scroll-margin-top: 16px;
+}
+
+/* Flex wrapper that holds info-grid and map-section side-by-side */
+.main-wrapper {
+  display: flex;
+  gap: var(--spacing-xl);
+  justify-content: space-between;
+}
+
+.main-wrapper .info-grid {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.main-wrapper .map-section {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* =============================================================
+   Info Grid — no cards, pure typography
+   ============================================================= */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-lg);
+}
+
+.info-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-primary);
+  text-wrap: pretty;
+}
+
+.info-section p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.info-section .footnote {
+  margin-top: var(--spacing-xs);
+  color: var(--color-text-muted);
+}
+
+/* Code-style URL display slab */
+.url-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-code);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  word-break: break-all;
+}
+.url-display code {
+  color: var(--color-primary);
+  flex: 1;
+}
+.url-display a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.url-display a:hover {
+  color: var(--color-primary);
+}
+
+/* Inline code */
+.info-section code {
+  background: var(--color-bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--color-primary);
+  word-break: break-all;
+  font-family: var(--font-mono);
+}
+
+/* Section divider */
+.section-divider {
+  margin: var(--spacing-md) 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Map list */
+.map-list {
+  list-style: none;
+  padding: 0;
+}
+.map-list li {
+  padding: var(--spacing-2xs) 0;
+  word-break: break-word;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+.map-list li::before {
+  content: "\2022";
+  color: var(--color-primary);
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+/* Map label chip */
+.map-label {
+  display: inline-block;
+  background: var(--color-bg-label);
+  color: var(--color-primary);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-weight: 500;
+  margin-right: 6px;
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+}
+
+/* =============================================================
+   Map Section
+   ============================================================= */
+.map-section {
+  width: 100%;
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.map-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--color-text);
+  text-wrap: pretty;
+}
+
+.map-section h2 .hint-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.map-controls label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.map-controls select {
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--color-bg-card);
+  color: var(--color-text);
+  cursor: pointer;
+  outline: none;
+  min-width: 200px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  touch-action: manipulation;
+}
+
+.map-controls select:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: var(--color-focus-ring);
+}
+
+.map-controls .hint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+/* --- Compare container --- */
+#comparison-container {
+  width: 100%;
+  height: 500px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 1px 6px var(--color-shadow);
+  position: relative;
+  background: var(--color-tile-bg);
+  transition: opacity 0.25s;
+}
+#comparison-container.is-loading {
+  opacity: 0.5;
+}
+
+.compare-map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.compare-map .maplibregl-ctrl-top-left {
+  top: 10px;
+  left: 10px;
+}
+
+.compare-map .maplibregl-ctrl-bottom-right {
+  display: none;
+}
+
+/* Override compare plugin styles */
+.maplibregl-compare {
+  background: var(--color-bg-card);
+  width: 4px;
+  z-index: 10;
+}
+.maplibregl-compare .compare-swiper-vertical {
+  background-color: var(--color-bg-card);
+  border: 3px solid var(--color-primary);
+  width: 44px;
+  height: 44px;
+  left: -22px;
+  margin-top: -22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background-image: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  touch-action: manipulation;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.maplibregl-compare .compare-swiper-vertical:focus-visible {
+  outline: none;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.4),
+    var(--color-focus-ring);
+  border-color: var(--color-primary-hover);
+}
+.maplibregl-compare .compare-swiper-vertical::after {
+  content: "\2194";
+}
+
+/* =============================================================
+   Footer
+   ============================================================= */
+footer {
+  text-align: center;
+  padding: var(--spacing-lg) 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+}
+
+footer a {
+  color: var(--color-primary);
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+footer a:focus-visible {
+  outline: none;
+  box-shadow: var(--color-focus-ring);
+}
+
+/* =============================================================
+   Animations — respects prefers-reduced-motion
+   ============================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =============================================================
+   Responsive
+   ============================================================= */
+@media (max-width: 900px) {
+  .main-wrapper {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  header {
+    padding: 24px 0 20px;
+  }
+  header h1 {
+    font-size: 20px;
+  }
+  .info-grid {
+    gap: var(--spacing-lg);
+  }
+  #comparison-container {
+    height: 320px;
+  }
+  .map-controls .hint {
+    display: none;
+  }
+  .map-controls select {
+    min-width: 0;
+    flex: 1;
+  }
+}
